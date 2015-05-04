@@ -1,15 +1,16 @@
 package bsdatomtoics
  
 import (
-   "flag";
-   "fmt";
-   "net/http";
-   "io";
-   "os";
-   "encoding/xml";
-   "bytes";
-   "strings";
-   "time";
+   "flag"
+   "fmt"
+   "net/http"
+   "io"
+   "io/ioutil"
+   "os"
+   "encoding/xml"
+   "bytes"
+   "strings"
+   "time"
 )
 
 var debugFlag = flag.Bool("debug", false, "turns debugging messaging on");
@@ -48,33 +49,28 @@ type Text struct {
 }
  
 type Time string
- 
-func FetchBytes(debug bool) []byte {
-   var rc []byte;
-   r, err := http.Get(queryURI);
-   if err == nil {
-      fmt.Fprintf(os.Stderr, "\nRequest complete\n");
-      if r.StatusCode == http.StatusOK {
-         rc = readerToBytes(r.Body);
-      } else {
-         fmt.Fprintf(os.Stderr,
-            "Error on request. Status: %s\n", r.Status)
-      }
-      r.Body.Close();
-   } else {
-      fmt.Fprintf(os.Stderr, "%v\n", err)
+
+func FetchBytes() ([]byte, error) {
+   return FetchBytesWith(http.DefaultClient)
+}
+func FetchBytesWith(client *http.Client) ([]byte, error) {
+   r, err := client.Get(queryURI)
+   if (err != nil || r.StatusCode != 200) {
+      return nil, err
    }
-   return rc;
+   rc, err := ioutil.ReadAll(r.Body);
+   defer r.Body.Close();
+   if (err != nil) { return nil, err }
+   return rc, nil;
 }
 
-func readerToBytes(r io.Reader) []byte {
-   buf := new(bytes.Buffer);
-   buf.ReadFrom(r);
-   return buf.Bytes();
-}
- 
 func AtomToICS(bytes []byte, writer io.Writer, debug bool) {
    var bsd Feed;
+   
+   if (bytes == nil || len(bytes) == 0) {
+      fmt.Fprintf(writer, "no bytes received in input to AtomToICS");
+      return;
+   }
    err := xml.Unmarshal(bytes, &bsd);
  
    if (debug){
@@ -138,5 +134,10 @@ func main() {
    // fmt.Fprintf(os.Stderr, "Start: %s\n", start);
    // fmt.Fprintf(os.Stderr, "End: %s\n", end);
    // fmt.Fprintf(os.Stderr, "Location: %s\n", location);
-   AtomToICS(FetchBytes(*debugFlag), os.Stdout, *debugFlag);
+   atom, err := FetchBytes()
+   if (err != nil) { 
+      fmt.Fprintf(os.Stderr, "Error fetching atom data: &s", err.Error())
+      return
+   }
+   AtomToICS(atom, os.Stdout, *debugFlag);
 }
