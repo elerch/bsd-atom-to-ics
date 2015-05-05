@@ -80,18 +80,18 @@ func AtomToICS(bytes []byte, writer io.Writer, debug bool) {
       fmt.Fprintf(os.Stderr, "Entry count after unmarshal: %v\n", len(bsd.Entry));
    }
    if err == nil {
-      fmt.Printf("BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//BSDATOMTOICS v1.0//EN\n");
+      fmt.Fprintf(writer, "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//BSDATOMTOICS v1.0//EN\r\n");
       for i := 0; i < len(bsd.Entry); i++ {
-         fmt.Fprintf(writer, "BEGIN:VEVENT\n");
-         fmt.Fprintf(writer, "SUMMARY:%s\n", bsd.Entry[i].Title);
+         fmt.Fprintf(writer, "BEGIN:VEVENT\r\n");
+         fmt.Fprintf(writer, "SUMMARY:%s\r\n", bsd.Entry[i].Title);
          parseStartEndLocation(bsd.Entry[i].Content);
          start, end, location := parseStartEndLocation(bsd.Entry[i].Content);
-         fmt.Fprintf(writer, "DTSTART:%s\n", start);
-         fmt.Fprintf(writer, "DTEND:%s\n", end);
-         fmt.Fprintf(writer, "LOCATION:%s\n", location);
-         fmt.Fprintf(writer, "END:VEVENT\n");
+         fmt.Fprintf(writer, "DTSTART:%s\r\n", start);
+         fmt.Fprintf(writer, "DTEND:%s\r\n", end);
+         fmt.Fprintf(writer, "LOCATION:%s\r\n", location);
+         fmt.Fprintf(writer, "END:VEVENT\r\n");
       }
-      fmt.Fprintf(writer, "END:VCALENDAR\n");
+      fmt.Fprintf(writer, "END:VCALENDAR\r\n");
    } else {
       fmt.Fprintf(os.Stderr, "Unable to parse the Atom feed (%v)\n", err)
    }
