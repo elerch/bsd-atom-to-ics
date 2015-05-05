@@ -22,7 +22,9 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    bsdatomtoics.AtomToICS(bsdatomtoics.FetchBytes(false), w, false);
+    bytes, err := bsdatomtoics.FetchBytes()
+    if err != nil { return }
+    bsdatomtoics.AtomToICS(bytes, w, false);
 }
 
 func main() {
