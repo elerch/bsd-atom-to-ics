@@ -2,7 +2,7 @@
 
 This golang package converts the Beaverton School District atom feed exposed at:
 
-[(https://www.beaverton.k12.or.us/_vti_bin/BSD.Extranet/Syndication.svc/GetDistrictCalendarFeed?format=atom](https://www.beaverton.k12.or.us/_vti_bin/BSD.Extranet/Syndication.svc/GetDistrictCalendarFeed?format=atom)
+[https://www.beaverton.k12.or.us/_vti_bin/BSD.Extranet/Syndication.svc/GetDistrictCalendarFeed?format=atom](https://www.beaverton.k12.or.us/_vti_bin/BSD.Extranet/Syndication.svc/GetDistrictCalendarFeed?format=atom)
 
 To an ICS feed consumable by Google Calendar, Outlook, etc.
 
