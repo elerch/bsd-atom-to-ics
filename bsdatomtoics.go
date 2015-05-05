@@ -80,8 +80,7 @@ func AtomToICS(bytes []byte, writer io.Writer, debug bool) {
     for i := 0; i < len(bsd.Entry); i++ {
       fmt.Fprintf(writer, "BEGIN:VEVENT\r\n")
       fmt.Fprintf(writer, "SUMMARY:%s\r\n", bsd.Entry[i].Title)
-      parseStartEndLocation(bsd.Entry[i].Content)
-      start, end, location := parseStartEndLocation(bsd.Entry[i].Content)
+      start, end, location := parseStartEndLocation(bsd.Entry[i].Content, debug)
       fmt.Fprintf(writer, "DTSTART:%s\r\n", start)
       fmt.Fprintf(writer, "DTEND:%s\r\n", end)
       fmt.Fprintf(writer, "LOCATION:%s\r\n", location)
@@ -93,13 +92,15 @@ func AtomToICS(bytes []byte, writer io.Writer, debug bool) {
   }
 }
 
-func parseStartEndLocation(content string) (string, string, string) {
+func parseStartEndLocation(content string, debug bool) (string, string, string) {
   //Event Time: 3/23/2015 12:00:00 PM - 3/27/2015 1:00:00 PM  Location:  Spring Break - Schools closed
   //fmt.Fprintf(os.Stderr, "Raw input: '%s'\n", content)
   strippedContent := strings.Replace(content, "\n", "", -1)
   reallyStrippedContent := strings.Replace(strippedContent, "\r", "", -1)
   eventTimeRemoved := strings.TrimLeft(strings.Replace(reallyStrippedContent, "Event Time: ", "", 1), " ")
-  fmt.Fprintf(os.Stderr, "After removal: '%s'\n", eventTimeRemoved)
+  if (debug) {
+    fmt.Fprintf(os.Stderr, "After removal: '%s'\n", eventTimeRemoved)
+  }
   timeFromLocation := strings.SplitAfterN(eventTimeRemoved, "Location: ", 2)
   time := timeFromLocation[0]
   location := timeFromLocation[1]
