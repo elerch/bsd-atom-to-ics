@@ -11,7 +11,10 @@ import (
   "time"
 )
 
-const queryURI = "https://www.beaverton.k12.or.us/_vti_bin/BSD.Extranet/Syndication.svc/GetDistrictCalendarFeed?format=atom"
+const queryStart = "https://www.beaverton.k12.or.us/"
+const queryEnd = "_vti_bin/BSD.Extranet/Syndication.svc/"
+//District: "https://www.beaverton.k12.or.us/_vti_bin/BSD.Extranet/Syndication.svc/GetDistrictCalendarFeed?format=atom"
+//JW "https://www.beaverton.k12.or.us/schools/jacob-wismer/_vti_bin/BSD.Extranet/Syndication.svc/GetSchoolEventsFeed?format=atom"
 const outputfmt = "%s\n"
 
 // Atom Feed Data Structure
@@ -46,18 +49,29 @@ type Text struct {
 type Time string
 
 func FetchBytes() ([]byte, error) {
-  return FetchBytesWith(http.DefaultClient)
+  return FetchBytesWith(http.DefaultClient, "")
 }
 
-func FetchBytesWith(client *http.Client) ([]byte, error) {
-  r, err := client.Get(queryURI)
-  if (err != nil || r.StatusCode != 200) {
-     return nil, err
-  }
-  rc, err := ioutil.ReadAll(r.Body)
-  defer r.Body.Close()
-  if (err != nil) { return nil, err }
-  return rc, nil
+func FetchBytesWith(client *http.Client, school string) ([]byte, error) {
+   finalUri := queryStart;
+   if school != "" { //jacob-wismer
+      finalUri = finalUri + "schools/" + school + "/"
+   }
+   finalUri = finalUri + queryEnd
+   if school == "" {
+      finalUri = finalUri + "GetDistrictCalendarFeed?format=atom"
+   } else {
+      finalUri = finalUri + "GetSchoolEventsFeed?format=atom"
+   } 
+   
+   r, err := client.Get(finalUri)
+   if (err != nil || r.StatusCode != 200) {
+      return nil, err
+   }
+   rc, err := ioutil.ReadAll(r.Body);
+   defer r.Body.Close();
+   if (err != nil) { return nil, err }
+   return rc, nil;
 }
 
 func AtomToICS(bytes []byte, writer io.Writer, debug bool) {
