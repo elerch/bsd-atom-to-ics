@@ -94,9 +94,10 @@ func AtomToICS(bytes []byte, writer io.Writer, debug bool) {
     for i := 0; i < len(bsd.Entry); i++ {
       fmt.Fprintf(writer, "BEGIN:VEVENT\r\n")
       fmt.Fprintf(writer, "SUMMARY:%s\r\n", bsd.Entry[i].Title)
-      start, end, location := parseStartEndLocation(bsd.Entry[i].Content, debug)
-      fmt.Fprintf(writer, "DTSTART:%s\r\n", start)
-      fmt.Fprintf(writer, "DTEND:%s\r\n", end)
+      startTime, endTime, location := parseStartEndLocation(bsd.Entry[i].Content, debug)
+      start, end := formatTimeForICS(startTime, endTime)
+      fmt.Fprintf(writer, "DTSTART%s\r\n", start)
+      fmt.Fprintf(writer, "DTEND%s\r\n", end)
       fmt.Fprintf(writer, "LOCATION:%s\r\n", location)
       fmt.Fprintf(writer, "END:VEVENT\r\n")
     }
@@ -106,7 +107,7 @@ func AtomToICS(bytes []byte, writer io.Writer, debug bool) {
   }
 }
 
-func parseStartEndLocation(content string, debug bool) (string, string, string) {
+func parseStartEndLocation(content string, debug bool) (time.Time, time.Time, string) {
   //Event Time: 3/23/2015 12:00:00 PM - 3/27/2015 1:00:00 PM  Location:  Spring Break - Schools closed
   //fmt.Fprintf(os.Stderr, "Raw input: '%s'\n", content)
   strippedContent := strings.Replace(content, "\n", "", -1)
@@ -119,16 +120,34 @@ func parseStartEndLocation(content string, debug bool) (string, string, string) 
   time := timeFromLocation[0]
   location := timeFromLocation[1]
   startFromEnd := strings.SplitAfterN(time, " - ", 2)
-  return toUTC(strings.Replace(startFromEnd[0], " - ", "", 1)),
-         toUTC(strings.TrimRight(strings.Replace(startFromEnd[1], "Location: ", "", 1), " ")),
+  return toTime(strings.Replace(startFromEnd[0], " - ", "", 1)),
+         toTime(strings.TrimRight(strings.Replace(startFromEnd[1], "Location: ", "", 1), " ")),
          strings.Trim(location, " ")
 }
 
-func toUTC(timeStr string) string {
+func toTime(timeStr string) time.Time {
   loc, _ := time.LoadLocation("America/Los_Angeles")
   //fmt.Fprintf(os.Stderr, "Input: |%s|\n", timeStr)
   //Mon Jan 2 15:04:05 -0700 MST 2006
   shortForm := "1/2/2006 3:04:05 PM"
   timeVal, _ := time.ParseInLocation(shortForm, timeStr, loc)
-  return timeVal.UTC().Format("20060102T030400Z")
+  return timeVal//.UTC().Format("20060102T030400Z")
+}
+
+func formatTimeForICS(start time.Time, end time.Time) (string, string) {
+  // start/end should be in local time. We need to detect midnight->11:59pm 
+  // entries and switch them to all day
+  startHour, startMin, startSec := start.Clock()
+  endHour, endMin, endSec := end.Clock()
+  if !(startHour == 0 && startMin == 0 && startSec == 0 &&
+     endHour == 23 && endMin == 59 && endSec == 0) {
+       return ":" + start.UTC().Format("20060102T030400Z"),
+              ":" + end.UTC().Format("20060102T030400Z")
+  }
+  // we're on an all day event - grab the start date and build the
+  // correct string values
+  startDay := ";VALUE=DATE:" + start.Format("20060102")
+  endDay   := ";VALUE=DATE:" + start.Add(time.Duration(24) * time.Hour).Format("20060102")
+  
+  return startDay, endDay
 }
