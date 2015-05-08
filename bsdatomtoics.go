@@ -147,7 +147,7 @@ func formatTimeForICS(start time.Time, end time.Time) (string, string) {
   // we're on an all day event - grab the start date and build the
   // correct string values
   startDay := ";VALUE=DATE:" + start.Format("20060102")
-  endDay   := ";VALUE=DATE:" + start.Add(time.Duration(24) * time.Hour).Format("20060102")
+  endDay   := ";VALUE=DATE:" + end.Add(time.Duration(1) * time.Minute).Format("20060102")
   
   return startDay, endDay
 }
