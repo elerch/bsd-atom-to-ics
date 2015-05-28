@@ -141,8 +141,8 @@ func formatTimeForICS(start time.Time, end time.Time) (string, string) {
   endHour, endMin, endSec := end.Clock()
   if !(startHour == 0 && startMin == 0 && startSec == 0 &&
      endHour == 23 && endMin == 59 && endSec == 0) {
-       return ":" + start.UTC().Format("20060102T030400Z"),
-              ":" + end.UTC().Format("20060102T030400Z")
+       return ":" + start.UTC().Format("20060102T150400Z"),
+              ":" + end.UTC().Format("20060102T150400Z")
   }
   // we're on an all day event - grab the start date and build the
   // correct string values
